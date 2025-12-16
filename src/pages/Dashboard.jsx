@@ -21,6 +21,12 @@ import {
 } from "recharts";
 
 const PIE_COLORS = ["#34D399", "#60A5FA", "#FBBF24", "#F472B6", "#A78BFA", "#F87171", "#22C55E", "#EAB308"];
+const tooltipStyles = {
+  background: "#0F172A",
+  border: "1px solid rgba(255,255,255,0.2)",
+  color: "#F8FAFC",
+};
+const tooltipText = { color: "#E5E7EB" };
 
 function sumBy(items, pred) {
   return items.reduce((acc, it) => (pred(it) ? acc + Number(it.amount || 0) : acc), 0);
@@ -149,7 +155,9 @@ export default function Dashboard() {
                   </Pie>
                   <Tooltip
                     formatter={(v) => formatCurrency(v, currency)}
-                    contentStyle={{ background: "#071B15", border: "1px solid rgba(255,255,255,0.1)" }}
+                    contentStyle={tooltipStyles}
+                    labelStyle={tooltipText}
+                    itemStyle={tooltipText}
                   />
                   <Legend />
                 </PieChart>
@@ -170,7 +178,9 @@ export default function Dashboard() {
                 <XAxis dataKey="month" tick={{ fill: "rgba(255,255,255,0.7)", fontSize: 12 }} />
                 <Tooltip
                   formatter={(v, name) => [formatCurrency(v, currency), name]}
-                  contentStyle={{ background: "#071B15", border: "1px solid rgba(255,255,255,0.1)" }}
+                  contentStyle={tooltipStyles}
+                  labelStyle={tooltipText}
+                  itemStyle={tooltipText}
                 />
                 <Legend />
                 <Bar dataKey="income" fill="#34D399" />
