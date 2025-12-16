@@ -1,102 +1,101 @@
+import React, { useMemo, useState } from "react";
 import Layout from "../components/Layout";
+import PageHeader from "../components/ui/PageHeader";
+import Card from "../components/ui/Card";
+import Button from "../components/ui/Button";
+import SelectInput from "../components/ui/SelectInput";
+import ConfirmDialog from "../components/ui/ConfirmDialog";
+import Alert from "../components/ui/Alert";
+import { CURRENCIES, useSettings } from "../context/SettingsContext";
+import { useTransactions } from "../context/TransactionsContext";
+import { API_BASE } from "../api/http";
 
 export default function Settings() {
+  const { currency, setCurrency } = useSettings();
+  const { items, remove, refresh } = useTransactions();
+
+  const [confirmClear, setConfirmClear] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  const txCount = useMemo(() => items.length, [items]);
+
+  async function clearAll() {
+    setBusy(true);
+    setMsg("");
+    try {
+      // Delete one by one (simple + clear to explain in demo)
+      for (const t of items) {
+        // eslint-disable-next-line no-await-in-loop
+        await remove(t.id);
+      }
+      await refresh();
+      setMsg("All transactions were deleted.");
+    } catch (e) {
+      setMsg(e?.message || "Failed to clear transactions.");
+    } finally {
+      setBusy(false);
+      setConfirmClear(false);
+    }
+  }
+
   return (
-    <Layout>
-      <div className="max-w-6xl mx-auto">
+    <Layout title="Settings">
+      <PageHeader title="Settings" subtitle="Small preferences for your tracker." />
 
-        {/* HEADER */}
-        <h1 className="text-3xl font-extrabold mb-6">Settings & Profile</h1>
-
-        {/* PROFILE CARD */}
-        <div className="bg-[#0F3A2E] rounded-xl border border-white/10 p-8 mb-8">
-          <div className="flex flex-col items-center text-center">
-            <span className="material-symbols-outlined text-5xl mb-4 text-white/60">
-              account_circle
-            </span>
-
-            <h2 className="text-xl font-bold">Alex Doe</h2>
-            <p className="text-white/60 text-sm mb-4">alex.doe@example.com</p>
-
-            <button className="bg-[#49B784] w-full max-w-md py-2 rounded-lg font-semibold mt-2">
-              Edit Profile
-            </button>
-
-            <button className="bg-white/10 w-full max-w-md py-2 rounded-lg font-semibold mt-2">
-              Change Password
-            </button>
-          </div>
+      {msg ? (
+        <div className="mt-6">
+          <Alert title="Status">{msg}</Alert>
         </div>
+      ) : null}
 
-        {/* GENERAL SETTINGS */}
-        <div className="bg-[#0F3A2E] rounded-xl border border-white/10 p-8 mb-8">
-          <h2 className="font-bold text-lg mb-4">General Settings</h2>
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <Card className="p-5">
+          <div className="text-lg font-extrabold">Preferences</div>
+          <div className="mt-4 max-w-sm">
+            <SelectInput label="Currency" value={currency} onChange={(e) => setCurrency(e.target.value)}>
+              {CURRENCIES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.label}
+                </option>
+              ))}
+            </SelectInput>
+            <p className="mt-2 text-xs text-white/60">
+              Used when formatting amounts in the UI.
+            </p>
+          </div>
+        </Card>
 
-          <div className="flex items-center justify-between py-2">
-            <div className="flex items-center gap-2 text-white/80">
-              <span className="material-symbols-outlined">dark_mode</span>
-              Theme
-            </div>
-            <input type="checkbox" className="toggle-checkbox" />
+        <Card className="p-5">
+          <div className="text-lg font-extrabold">Data</div>
+          <div className="mt-2 text-sm text-white/70">
+            Transactions in the mock API: <span className="font-bold text-white">{txCount}</span>
           </div>
 
-          <div className="flex items-center justify-between py-2">
-            <div className="flex items-center gap-2 text-white/80">
-              <span className="material-symbols-outlined">payments</span>
-              Default Currency
-            </div>
-
-            <select className="bg-[#082D23] px-4 py-2 rounded-lg border border-white/20 text-white">
-              <option>USD – US Dollar</option>
-              <option>EGP – Egyptian Pound</option>
-              <option>EUR – Euro</option>
-            </select>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button variant="secondary" onClick={refresh} disabled={busy}>
+              Refresh
+            </Button>
+            <Button variant="danger" onClick={() => setConfirmClear(true)} disabled={busy || txCount === 0}>
+              {busy ? "Working…" : "Delete all transactions"}
+            </Button>
           </div>
-        </div>
 
-        {/* MONTHLY BUDGETS */}
-        <div className="bg-[#0F3A2E] rounded-xl border border-white/10 p-8 mb-6">
-          <h2 className="font-bold text-lg mb-4">Monthly Budgets</h2>
-
-          <div className="space-y-4">
-            <Budget label="Groceries" spent={300} total={500} />
-            <Budget label="Transport" spent={120} total={200} />
-            <Budget label="Entertainment" spent={250} total={250} />
-            <Budget label="Utilities" spent={85} total={150} />
+          <div className="mt-4 text-xs text-white/60">
+            API base: <span className="font-mono">{API_BASE}</span>
           </div>
-        </div>
-
-        <button className="bg-[#49B784] px-6 py-3 rounded-lg font-semibold">
-          Save Changes
-        </button>
-
+        </Card>
       </div>
+
+      <ConfirmDialog
+        open={confirmClear}
+        title="Delete all transactions?"
+        message="This will remove every transaction from the mock API. You can’t undo this."
+        danger
+        confirmText={busy ? "Deleting…" : "Delete all"}
+        onCancel={() => setConfirmClear(false)}
+        onConfirm={clearAll}
+      />
     </Layout>
-  );
-}
-
-/* --- Helper Component --- */
-
-function Budget({ label, spent, total }) {
-  const percent = Math.min((spent / total) * 100, 100);
-
-  return (
-    <div>
-      <div className="flex justify-between text-white/80 mb-1">
-        <span>{label}</span>
-        <span>
-          ${spent} / ${total}
-        </span>
-      </div>
-
-      <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-        <div
-          style={{ width: `${percent}%` }}
-          className={`h-full rounded-full ${
-            percent >= 100 ? "bg-red-500" : "bg-[#49B784]"
-          }`}
-        ></div>
-      </div>
-    </div>
   );
 }

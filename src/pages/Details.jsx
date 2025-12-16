@@ -1,109 +1,138 @@
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import Layout from "../components/Layout";
-import { useParams, useNavigate } from "react-router-dom";
+import PageHeader from "../components/ui/PageHeader";
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
+import Spinner from "../components/ui/Spinner";
+import Alert from "../components/ui/Alert";
+import ConfirmDialog from "../components/ui/ConfirmDialog";
+import { useTransactions } from "../context/TransactionsContext";
+import { useSettings } from "../context/SettingsContext";
+import { formatCurrency } from "../utils/format";
 
-export default function Details() {
-  const { id } = useParams();
-  const navigate = useNavigate();
-
-  // Dummy data (same structure as your Transactions page)
-  const transactions = [
-    {
-      id: 1,
-      date: "Oct 26, 2023",
-      type: "Expense",
-      category: "Groceries",
-      account: "Checking (...4321)",
-      description:
-        "Weekly shopping at the local market for groceries and household supplies.",
-      amount: -125.5,
-    },
-    {
-      id: 2,
-      date: "Oct 25, 2023",
-      type: "Income",
-      category: "Salary",
-      account: "Bank (...9988)",
-      description: "Bi-weekly salary deposit.",
-      amount: 2500,
-    },
-  ];
-
-  const tx = transactions.find((t) => String(t.id) === id);
-
-  if (!tx) {
-    return (
-      <Layout>
-        <div className="text-center text-white text-xl mt-20">
-          Transaction not found.
-        </div>
-      </Layout>
-    );
-  }
-
-  return (
-    <Layout>
-      <div className="max-w-4xl mx-auto">
-
-        {/* BACK BUTTON */}
-        <button
-          onClick={() => navigate("/transactions")}
-          className="flex items-center gap-2 text-[#49B784] mb-6"
-        >
-          <span className="material-symbols-outlined">arrow_back</span>
-          Back to list
-        </button>
-
-        {/* CARD */}
-        <div className="bg-[#0F3A2E] border border-white/10 rounded-xl p-8 shadow-md">
-          
-          {/* AMOUNT */}
-          <h1 className="text-4xl font-extrabold mb-6">
-            {tx.amount < 0 ? (
-              <span className="text-red-400">-${Math.abs(tx.amount)}</span>
-            ) : (
-              <span className="text-green-400">+${tx.amount}</span>
-            )}
-          </h1>
-
-          {/* INFO GRID */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 mb-8 text-white/90">
-
-            <Info label="Type" value={tx.type} />
-            <Info label="Category" value={tx.category} />
-
-            <Info label="Date" value={tx.date} />
-            <Info label="Account" value={tx.account} />
-
-          </div>
-
-          {/* DESCRIPTION */}
-          <div className="text-white/90 mb-8">
-            <h3 className="font-semibold mb-2">Description</h3>
-            <p className="text-white/70">{tx.description}</p>
-          </div>
-
-          {/* ACTION BUTTONS */}
-          <div className="flex gap-4">
-            <button className="bg-[#49B784] px-6 py-2 rounded-lg font-semibold">
-              Edit
-            </button>
-            <button className="bg-red-600/30 border border-red-600 px-6 py-2 rounded-lg font-semibold text-red-300 hover:bg-red-600/50 transition">
-              Delete
-            </button>
-          </div>
-
-        </div>
-      </div>
-    </Layout>
-  );
-}
-
-/* --- Helper Component --- */
 function Info({ label, value }) {
   return (
     <div>
-      <h3 className="text-white/60 text-sm">{label}</h3>
-      <p className="text-lg font-semibold mt-1">{value}</p>
+      <div className="text-xs font-semibold text-white/50">{label}</div>
+      <div className="mt-1 text-sm font-bold text-white/90">{value}</div>
     </div>
+  );
+}
+
+export default function Details() {
+  const { id } = useParams();
+  const nav = useNavigate();
+  const { getById, remove } = useTransactions();
+  const { currency } = useSettings();
+
+  const [tx, setTx] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState("");
+  const [confirm, setConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    setLoading(true);
+    setErr("");
+    (async () => {
+      try {
+        const t = await getById(id);
+        if (!alive) return;
+        setTx(t);
+      } catch (e) {
+        if (!alive) return;
+        setErr(e?.message || "Failed to load transaction.");
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [id, getById]);
+
+  async function onDelete() {
+    setDeleting(true);
+    try {
+      await remove(id);
+      nav("/transactions");
+    } catch (e) {
+      setErr(e?.message || "Delete failed.");
+    } finally {
+      setDeleting(false);
+      setConfirm(false);
+    }
+  }
+
+  const isIncome = tx?.type === "income";
+
+  return (
+    <Layout title="Transaction details">
+      <PageHeader
+        title="Transaction details"
+        subtitle="View, edit, or delete this transaction."
+        right={
+          <Button variant="secondary" onClick={() => nav("/transactions")}>
+            Back
+          </Button>
+        }
+      />
+
+      {loading ? (
+        <div className="mt-6">
+          <Spinner />
+        </div>
+      ) : null}
+
+      {err ? (
+        <div className="mt-6">
+          <Alert title="Something went wrong">{err}</Alert>
+        </div>
+      ) : null}
+
+      {tx && !loading ? (
+        <div className="mt-6 space-y-4">
+          <Card className="p-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <div className="text-xs text-white/60">Amount</div>
+                <div className={`mt-1 text-3xl font-extrabold ${isIncome ? "text-emerald-200" : "text-red-200"}`}>
+                  {isIncome ? "+" : "-"}
+                  {formatCurrency(Number(tx.amount || 0), currency)}
+                </div>
+                <div className="mt-2 text-sm text-white/70">{tx.description || "—"}</div>
+              </div>
+
+              <div className="flex gap-2">
+                <Button onClick={() => nav(`/transactions/${id}/edit`)}>Edit</Button>
+                <Button variant="danger" onClick={() => setConfirm(true)} disabled={deleting}>
+                  Delete
+                </Button>
+              </div>
+            </div>
+
+            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Info label="Type" value={tx.type} />
+              <Info label="Category" value={tx.category || "Other"} />
+              <Info label="Date" value={tx.date} />
+              <Info label="ID" value={String(tx.id)} />
+            </div>
+          </Card>
+        </div>
+      ) : null}
+
+      <ConfirmDialog
+        open={confirm}
+        title="Delete transaction?"
+        message="This action cannot be undone."
+        confirmText={deleting ? "Deleting…" : "Delete"}
+        cancelText="Cancel"
+        danger
+        onCancel={() => setConfirm(false)}
+        onConfirm={onDelete}
+      />
+    </Layout>
   );
 }

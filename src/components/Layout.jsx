@@ -1,77 +1,153 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
-export default function Layout({ children }) {
-  const navigate = useNavigate();
+function NavItem({ to, icon, label, onClick }) {
+  return (
+    <NavLink
+      to={to}
+      onClick={onClick}
+      className={({ isActive }) =>
+        `flex items-center gap-3 px-4 py-3 rounded-lg w-full transition text-left
+         ${isActive ? "bg-white/15 text-white" : "text-white/80 hover:bg-white/10 hover:text-white"}`
+      }
+    >
+      <span className="material-symbols-outlined" aria-hidden="true">
+        {icon}
+      </span>
+      <span className="font-semibold">{label}</span>
+    </NavLink>
+  );
+}
+
+export default function Layout({ title, children }) {
   const [open, setOpen] = useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
-  const NavItem = ({ icon, label, to }) => {
-    const active = window.location.pathname === to;
-    return (
-      <button
-        onClick={() => {
-          navigate(to);
-          setOpen(false);
-        }}
-        className={`flex items-center gap-3 px-4 py-3 rounded-lg w-full transition
-        ${active ? "bg-[#49B784]/40 font-bold" : "hover:bg-white/10"}
-        text-white`}
-      >
-        <span className="material-symbols-outlined">{icon}</span>
-        {label}
-      </button>
-    );
-  };
+  // Brand logo should always take you to the main landing page.
+  const homePath = "/";
+
+  useEffect(() => {
+    function onKey(e) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   return (
-    <div className="flex min-h-screen bg-[#082D23]">
-
-      {/* MOBILE MENU BUTTON */}
-      <button
-        onClick={() => setOpen(true)}
-        className="md:hidden fixed top-4 left-4 z-[200] bg-white/10 border border-white/20 text-white p-2 rounded-lg"
+    <div className="min-h-screen bg-[#071B15] text-white">
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-white focus:px-3 focus:py-2 focus:text-black"
       >
-        <span className="material-symbols-outlined">menu</span>
-      </button>
+        Skip to content
+      </a>
 
-      {/* MOBILE OVERLAY */}
-      {open && (
-        <div
-          className="fixed inset-0 bg-black/40 z-[150]"
-          onClick={() => setOpen(false)}
-        />
-      )}
+      {/* Mobile top bar */}
+      <header className="sticky top-0 z-40 flex items-center justify-between gap-3 border-b border-white/10 bg-[#071B15]/90 px-4 py-3 backdrop-blur md:hidden">
+        <button
+          aria-label="Open navigation"
+          onClick={() => setOpen(true)}
+          className="inline-flex items-center justify-center rounded-lg bg-white/10 p-2 hover:bg-white/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+        >
+          <span className="material-symbols-outlined" aria-hidden="true">
+            menu
+          </span>
+        </button>
 
-      {/* SIDEBAR */}
-      <aside
-        className={`fixed top-0 left-0 w-64 h-full bg-[#0c3327] text-white shadow-xl z-[200]
-        transform transition-transform duration-300
-        ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
-      `}
-      >
-        <div className="p-6">
-          <img src="/Logo.png" className="h-10 mx-auto md:mx-0" />
+        <div className="min-w-0 flex items-center gap-3">
+          <Link
+            to={homePath}
+            aria-label="MoneyStr8 home"
+            className="shrink-0 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+          >
+            <img src="/Logo.png" alt="MoneyStr8" className="h-8 w-auto" />
+          </Link>
+
+          <div className="min-w-0">
+            <div className="truncate text-base font-extrabold">{title || "MoneyStr8"}</div>
+            <div className="truncate text-xs text-white/60">{user?.email || ""}</div>
+          </div>
         </div>
 
-        <nav className="px-4 space-y-2">
-          <NavItem icon="dashboard" label="Dashboard" to="/dashboard" />
-          <NavItem icon="receipt_long" label="Transactions" to="/transactions" />
-          <NavItem icon="settings" label="Settings" to="/settings" />
+        <button
+          aria-label="Go to dashboard"
+          onClick={() => navigate("/dashboard")}
+          className="inline-flex items-center justify-center rounded-lg bg-white/10 p-2 hover:bg-white/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+        >
+          <span className="material-symbols-outlined" aria-hidden="true">
+            dashboard
+          </span>
+        </button>
+      </header>
+
+      {/* Sidebar */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-72 border-r border-white/10 bg-[#0B2A21] p-5 transition-transform md:translate-x-0
+        ${open ? "translate-x-0" : "-translate-x-full"} md:fixed`}
+        aria-label="Primary"
+      >
+        <div className="flex items-center justify-between md:justify-start">
+          <Link
+            to={homePath}
+            className="flex items-center gap-3 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+            aria-label="MoneyStr8 home"
+          >
+            <img src="/Logo.png" alt="MoneyStr8" className="h-9 w-auto" />
+            <span className="sr-only">MoneyStr8</span>
+          </Link>
+
+          <button
+            aria-label="Close navigation"
+            onClick={() => setOpen(false)}
+            className="rounded-lg bg-white/10 p-2 hover:bg-white/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 md:hidden"
+          >
+            <span className="material-symbols-outlined" aria-hidden="true">
+              close
+            </span>
+          </button>
+        </div>
+
+        <div className="mt-2 text-xs text-white/60">
+          {user?.name ? <span className="font-semibold text-white/80">{user.name}</span> : null}
+          {user?.email ? <span className="block truncate">{user.email}</span> : null}
+        </div>
+
+        <nav className="mt-6 space-y-2">
+          <NavItem to="/dashboard" icon="dashboard" label="Dashboard" onClick={() => setOpen(false)} />
+          <NavItem to="/transactions" icon="receipt_long" label="Transactions" onClick={() => setOpen(false)} />
+          <NavItem to="/settings" icon="settings" label="Settings" onClick={() => setOpen(false)} />
         </nav>
 
-        <div className="mt-auto p-4">
+        <div className="mt-6 border-t border-white/10 pt-4">
           <button
-            onClick={() => navigate("/login")}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/10 w-full"
+            onClick={() => {
+              logout();
+              navigate("/");
+            }}
+            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left font-semibold text-white/80 hover:bg-white/10 hover:text-white"
           >
-            <span className="material-symbols-outlined">logout</span>
+            <span className="material-symbols-outlined" aria-hidden="true">
+              logout
+            </span>
             Logout
           </button>
         </div>
       </aside>
 
-      {/* PAGE CONTENT */}
-      <main className="flex-1 p-6 md:ml-64 text-[#BDEED0]">
+      {/* Mobile overlay */}
+      {open ? (
+        <button
+          aria-label="Close navigation overlay"
+          className="fixed inset-0 z-40 bg-black/60 md:hidden"
+          onClick={() => setOpen(false)}
+        />
+      ) : null}
+
+      {/* Main */}
+      <main id="main" className="mx-auto w-full max-w-6xl px-4 py-6 md:ml-72 md:px-8">
         {children}
       </main>
     </div>

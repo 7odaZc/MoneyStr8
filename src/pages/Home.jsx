@@ -1,176 +1,112 @@
 import React from "react";
 import { Link } from "react-router-dom";
-
-//Mahmoud 
+import Button from "../components/ui/Button";
+import { useAuth } from "../context/AuthContext";
 
 export default function Home() {
+  const { isAuthed } = useAuth();
+
   return (
-    <div className="min-h-screen w-full bg-transparent text-[#BDEED0] font-display">
+    <div className="min-h-screen bg-[#071B15] text-white">
+      <div className="mx-auto max-w-6xl px-4 py-10">
+        <header className="flex items-center justify-between">
+          <div className="text-xl font-extrabold">MoneyStr8</div>
+          <div className="flex items-center gap-2">
+            {isAuthed ? (
+              <Link to="/dashboard">
+                <Button>Dashboard</Button>
+              </Link>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button variant="secondary">Login</Button>
+                </Link>
+                <Link to="/register">
+                  <Button>Register</Button>
+                </Link>
+              </>
+            )}
+          </div>
+        </header>
 
-      {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-[#1E5E4A]">
-        <div className="flex items-center gap-2">
-          <Link
-            className="text-[#BDEED0] hover:text-[#49B784] text-base font-medium"
-            to="/"
-          >
-            MoneyStr8
-          </Link>
-        </div>
-
-        <div className="hidden md:flex items-center gap-4">
-          <a
-            className="text-[#BDEED0] hover:text-[#49B784] text-base font-medium"
-            href="#features"
-          >
-            Features
-          </a>
-          <a
-            className="text-[#BDEED0] hover:text-[#49B784] text-base font-medium"
-            href="#about"
-          >
-            About
-          </a>
-
-          <Link
-            to="/login"
-            className="px-4 py-2 bg-[#49B784] text-white rounded-lg font-medium hover:bg-[#358E6A] transition"
-          >
-            Log in
-          </Link>
-        </div>
-      </header>
-
-      {/* Hero Section */}
-      <main className="py-16 px-6">
-        <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center gap-12">
-          <div className="lg:w-1/2 space-y-6 text-center lg:text-left">
-            <img
-              src="/Logo.png"
-              alt="MoneyStr8 Logo"
-              className="h-10 w-auto mx-auto lg:mx-0 mb-4"
-            />
-
-            <p className="text-lg text-[#BDEED0]/80 leading-relaxed">
-              The complete platform for managing eco-friendly business operations
-              with powerful analytics and team collaboration.
+        <div className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-2 lg:items-center">
+          <div>
+            <h1 className="text-4xl font-extrabold leading-tight sm:text-5xl">
+              Track income & expenses.
+              <span className="block text-emerald-300">Get your Money Straight.</span>
+            </h1>
+            <p className="mt-4 text-base text-white/70">
+              Add transactions, filter and search them, and get quick insights with charts.
+              Everything is responsive and works great on mobile.
             </p>
 
-            <div className="pt-2">
-              <Link
-                to="/login"
-                className="mt-6 px-6 py-3 bg-[#49B784] text-white rounded-lg font-bold hover:bg-[#358E6A] transition inline-block text-center lg:text-left"
-              >
-                Get Started
-              </Link>
-            </div>
-          </div>
-
-          <div className="lg:w-1/2">
-            <img src="/Analysis.png" alt="Dashboard" className="h-13 w-auto mb-5" />
-          </div>
-        </div>
-      </main>
-
-      {/* Features Section */}
-      <section id="features" className="py-16 px-6 mt-12">
-        <div className="max-w-6xl mx-auto">
-          <div className="bg-[#082D23]/70 p-8 rounded-xl border border-[#1E5E4A] shadow-lg">
-
-            {/* Title */}
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-white">
-                Everything you need to succeed
-              </h2>
-              <p className="mt-2 text-lg text-[#BDEED0]/80">
-                Powerful features designed to help your business grow while
-                maintaining sustainability.
-              </p>
+            <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:items-center">
+              {isAuthed ? (
+                <Link to="/transactions">
+                  <Button size="lg">View Transactions</Button>
+                </Link>
+              ) : (
+                <>
+                  <Link to="/register">
+                    <Button size="lg">Get Started</Button>
+                  </Link>
+                  <Link to="/login">
+                    <Button size="lg" variant="secondary">
+                      I already have an account
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
 
-            {/* Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-
-              {/* Card 1 */}
-              <div className="bg-[#082D23]/70 p-6 rounded-xl border border-[#1E5E4A] hover:border-[#49B784] transition">
-                <div className="w-12 h-12 bg-[#49B784]/20 rounded-lg flex items-center justify-center mb-4">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    className="w-6 h-6 text-[#49B784]"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5-10.5L16.5 15m0 0l-4.5 4.5M16.5 15v-13.5"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold text-white mb-2">
-                  Advanced Analytics
-                </h3>
-                <p className="text-[#BDEED0]/80">
-                  Track sustainability metrics and business performance with
-                  real-time dashboards and insights.
-                </p>
+            <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <div className="text-sm font-bold">CRUD</div>
+                <div className="mt-1 text-xs text-white/60">Add, edit, delete transactions.</div>
               </div>
-
-              {/* Card 2 */}
-              <div className="bg-[#082D23]/70 p-6 rounded-xl border border-[#1E5E4A] hover:border-[#49B784] transition">
-                <div className="w-12 h-12 bg-[#49B784]/20 rounded-lg flex items-center justify-center mb-4">
-                  <img src="/coobirate.png" alt="Team" className="h-13 w-auto" />
-                </div>
-                <h3 className="text-xl font-bold text-white mb-2">
-                  Team Collaboration
-                </h3>
-                <p className="text-[#BDEED0]/80">
-                  Work seamlessly with your team using shared workspaces,
-                  comments, and real-time updates.
-                </p>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <div className="text-sm font-bold">Filters</div>
+                <div className="mt-1 text-xs text-white/60">Type, category, date range, search.</div>
               </div>
-
-              {/* Card 3 */}
-              <div className="bg-[#082D23]/70 p-6 rounded-xl border border-[#1E5E4A] hover:border-[#49B784] transition">
-                <div className="w-12 h-12 bg-[#49B784]/20 rounded-lg flex items-center justify-center mb-4">
-                  <img src="/security.png" alt="Security" className="h-12 w-auto" />
-                </div>
-                <h3 className="text-xl font-bold text-white mb-2">
-                  Enterprise Security
-                </h3>
-                <p className="text-[#BDEED0]/80">
-                  Bank-level encryption and security protocols keep your data
-                  safe and compliant.
-                </p>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <div className="text-sm font-bold">Charts</div>
+                <div className="mt-1 text-xs text-white/60">Monthly trends + category split.</div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* Footer */}
-      <footer className="py-8 px-6 border-t border-[#1E5E4A] mt-12">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-[#BDEED0]/70 text-sm">MoneyStr8</span>
-          </div>
-          <div className="flex gap-6">
-            <a
-              className="text-[#BDEED0]/70 hover:text-[#49B784] text-sm"
-              href="#about"
-            >
-              About
-            </a>
-            <a
-              className="text-[#BDEED0]/70 hover:text-[#49B784] text-sm"
-              href="#contact"
-            >
-              Contact
-            </a>
+          <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-emerald-500/15 to-white/5 p-6">
+            <div className="flex items-start gap-3">
+              <span className="material-symbols-outlined text-emerald-300" aria-hidden="true">
+                receipt_long
+              </span>
+              <div>
+                <div className="text-lg font-extrabold">Tip</div>
+                <p className="mt-1 text-sm text-white/70">
+                  Start by adding your salary as an <span className="font-semibold text-white">Income</span> transaction,
+                  then add your daily expenses. The dashboard updates instantly.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 rounded-xl border border-white/10 bg-black/30 p-4">
+              <div className="text-xs text-white/60">Example transaction</div>
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <div className="font-bold">Groceries</div>
+                  <div className="text-xs text-white/60">2025-12-01 • expense</div>
+                </div>
+                <div className="text-lg font-extrabold text-red-300">-72.50</div>
+              </div>
+              <div className="mt-2 text-sm text-white/70">Weekly grocery shopping</div>
+            </div>
           </div>
         </div>
-      </footer>
+
+        <footer className="mt-12 border-t border-white/10 pt-6 text-xs text-white/50">
+          Built with React + Tailwind + JSON Server (mock API).
+        </footer>
+      </div>
     </div>
   );
 }

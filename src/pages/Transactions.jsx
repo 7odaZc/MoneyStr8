@@ -1,66 +1,246 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
+import PageHeader from "../components/ui/PageHeader";
+import Button from "../components/ui/Button";
+import TextInput from "../components/ui/TextInput";
+import SelectInput from "../components/ui/SelectInput";
+import Spinner from "../components/ui/Spinner";
+import Alert from "../components/ui/Alert";
+import EmptyState from "../components/ui/EmptyState";
+import Card from "../components/ui/Card";
+import { useTransactions, DEFAULT_CATEGORIES } from "../context/TransactionsContext";
+import { useSettings } from "../context/SettingsContext";
+import { formatCurrency, parseISODate } from "../utils/format";
+
+function typeLabel(t) {
+  return t === "income" ? "Income" : "Expense";
+}
 
 export default function Transactions() {
-  const navigate = useNavigate();
+  const nav = useNavigate();
+  const { items, loading, error, refresh } = useTransactions();
+  const { currency } = useSettings();
 
-  const transactions = [
-    { id: 1, date: "Oct 26, 2023", type: "Expense", category: "Groceries", description: "Weekly grocery shopping", amount: "-$72.5" },
-    { id: 2, date: "Oct 24, 2023", type: "Income", category: "Salary", description: "Monthly salary", amount: "+$3,500.0" },
-    { id: 3, date: "Oct 23, 2023", type: "Expense", category: "Transportation", description: "Uber ride", amount: "-$18.0" },
-    { id: 4, date: "Oct 22, 2023", type: "Expense", category: "Dining", description: "Restaurant dinner", amount: "-$45.8" },
-    { id: 5, date: "Oct 20, 2023", type: "Expense", category: "Utilities", description: "Electricity bill", amount: "-$112.3" },
-  ];
+  const [q, setQ] = useState("");
+  const [type, setType] = useState("all");
+  const [category, setCategory] = useState("all");
+  const [start, setStart] = useState("");
+  const [end, setEnd] = useState("");
+  const [sort, setSort] = useState("date_desc");
+
+  const categories = useMemo(() => {
+    const set = new Set(DEFAULT_CATEGORIES);
+    for (const t of items) if (t.category) set.add(t.category);
+    return Array.from(set.values()).sort((a, b) => a.localeCompare(b));
+  }, [items]);
+
+  const filtered = useMemo(() => {
+    const query = q.trim().toLowerCase();
+
+    const inRange = (tx) => {
+      const d = parseISODate(tx.date);
+      if (!d) return false;
+      if (start) {
+        const s = parseISODate(start);
+        if (s && d < s) return false;
+      }
+      if (end) {
+        const e = parseISODate(end);
+        if (e && d > e) return false;
+      }
+      return true;
+    };
+
+    let list = items.slice();
+
+    if (type !== "all") list = list.filter((t) => t.type === type);
+    if (category !== "all") list = list.filter((t) => (t.category || "Other") === category);
+    if (start || end) list = list.filter(inRange);
+
+    if (query) {
+      list = list.filter((t) => {
+        const a = String(t.description || "").toLowerCase();
+        const b = String(t.category || "").toLowerCase();
+        const c = String(t.type || "").toLowerCase();
+        return a.includes(query) || b.includes(query) || c.includes(query);
+      });
+    }
+
+    const byDate = (a, b) => (parseISODate(a.date)?.getTime() || 0) - (parseISODate(b.date)?.getTime() || 0);
+
+    list.sort((a, b) => {
+      if (sort === "date_desc") return byDate(b, a);
+      if (sort === "date_asc") return byDate(a, b);
+      if (sort === "amount_desc") return Number(b.amount || 0) - Number(a.amount || 0);
+      if (sort === "amount_asc") return Number(a.amount || 0) - Number(b.amount || 0);
+      return 0;
+    });
+
+    return list;
+  }, [items, q, type, category, start, end, sort]);
 
   return (
-    <Layout>
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-extrabold">Transactions</h1>
-          <button
-            className="bg-[#49B784] px-4 py-2 rounded-lg font-semibold text-[#082D23]"
-            onClick={() => alert("Static prototype: Add Transaction form not wired.")}
-          >
-            + Add
-          </button>
-        </div>
+    <Layout title="Transactions">
+      <PageHeader
+        title="Transactions"
+        subtitle="Search, filter, and manage your income and expenses."
+        right={
+          <>
+            <Button variant="secondary" onClick={refresh}>
+              Refresh
+            </Button>
+            <Button onClick={() => nav("/transactions/new")}>+ Add</Button>
+          </>
+        }
+      />
 
-        <div className="bg-[#0F3A2E] rounded-xl border border-white/10 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead className="bg-white/5 text-white/70">
-                <tr>
-                  <th className="px-6 py-4 font-semibold">Date</th>
-                  <th className="px-6 py-4 font-semibold">Type</th>
-                  <th className="px-6 py-4 font-semibold">Category</th>
-                  <th className="px-6 py-4 font-semibold">Description</th>
-                  <th className="px-6 py-4 font-semibold text-right">Amount</th>
-                  <th className="px-6 py-4 font-semibold text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transactions.map((t) => (
-                  <tr key={t.id} className="border-t border-white/10 hover:bg-white/5">
-                    <td className="px-6 py-4">{t.date}</td>
-                    <td className="px-6 py-4">{t.type}</td>
-                    <td className="px-6 py-4">{t.category}</td>
-                    <td className="px-6 py-4">{t.description}</td>
-                    <td className={`px-6 py-4 text-right ${t.amount.startsWith("+") ? "text-[#49B784]" : "text-red-300"}`}>{t.amount}</td>
-                    <td className="px-6 py-4 text-right">
-                      <button
-                        className="text-[#49B784] hover:underline"
-                        onClick={() => navigate(`/transactions/${t.id}`)}
-                      >
-                        View
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      <Card className="mt-6 p-5">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-5">
+          <TextInput
+            label="Search"
+            placeholder="Description, category, type…"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
+
+          <SelectInput label="Type" value={type} onChange={(e) => setType(e.target.value)}>
+            <option value="all">All</option>
+            <option value="income">Income</option>
+            <option value="expense">Expense</option>
+          </SelectInput>
+
+          <SelectInput label="Category" value={category} onChange={(e) => setCategory(e.target.value)}>
+            <option value="all">All</option>
+            {categories.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </SelectInput>
+
+          <TextInput label="From" type="date" value={start} onChange={(e) => setStart(e.target.value)} />
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-1">
+            <TextInput label="To" type="date" value={end} onChange={(e) => setEnd(e.target.value)} />
+            <SelectInput label="Sort" value={sort} onChange={(e) => setSort(e.target.value)}>
+              <option value="date_desc">Newest</option>
+              <option value="date_asc">Oldest</option>
+              <option value="amount_desc">Amount (high)</option>
+              <option value="amount_asc">Amount (low)</option>
+            </SelectInput>
           </div>
         </div>
+      </Card>
+
+      {loading ? (
+        <div className="mt-6">
+          <Spinner />
+        </div>
+      ) : null}
+
+      {error ? (
+        <div className="mt-6">
+          <Alert title="Couldn’t load transactions" onRetry={refresh}>
+            {error}
+          </Alert>
+        </div>
+      ) : null}
+
+      <div className="mt-6">
+        {filtered.length === 0 && !loading ? (
+          <EmptyState
+            title="No transactions found"
+            subtitle="Try changing the filters, or add a new transaction."
+            actionLabel="Add transaction"
+            onAction={() => nav("/transactions/new")}
+          />
+        ) : null}
+
+        {/* Desktop table */}
+        {filtered.length > 0 ? (
+          <div className="hidden md:block">
+            <Card className="overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-white/5 text-white/70">
+                    <tr>
+                      <th className="px-5 py-3 font-semibold">Date</th>
+                      <th className="px-5 py-3 font-semibold">Type</th>
+                      <th className="px-5 py-3 font-semibold">Category</th>
+                      <th className="px-5 py-3 font-semibold">Description</th>
+                      <th className="px-5 py-3 font-semibold text-right">Amount</th>
+                      <th className="px-5 py-3 font-semibold"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map((t) => {
+                      const isIncome = t.type === "income";
+                      return (
+                        <tr key={t.id} className="border-t border-white/10 hover:bg-white/5">
+                          <td className="px-5 py-4 text-white/80">{t.date}</td>
+                          <td className="px-5 py-4">
+                            <span
+                              className={`rounded-full px-2.5 py-1 text-xs font-bold ${
+                                isIncome ? "bg-emerald-500/20 text-emerald-200" : "bg-red-500/20 text-red-200"
+                              }`}
+                            >
+                              {typeLabel(t.type)}
+                            </span>
+                          </td>
+                          <td className="px-5 py-4 text-white/80">{t.category || "Other"}</td>
+                          <td className="px-5 py-4 text-white/80">{t.description || "-"}</td>
+                          <td className={`px-5 py-4 text-right font-extrabold ${isIncome ? "text-emerald-200" : "text-red-200"}`}>
+                            {isIncome ? "+" : "-"}
+                            {formatCurrency(Number(t.amount || 0), currency)}
+                          </td>
+                          <td className="px-5 py-4 text-right">
+                            <Button variant="ghost" onClick={() => nav(`/transactions/${t.id}`)}>
+                              View
+                            </Button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          </div>
+        ) : null}
+
+        {/* Mobile list */}
+        {filtered.length > 0 ? (
+          <div className="space-y-3 md:hidden">
+            {filtered.map((t) => {
+              const isIncome = t.type === "income";
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => nav(`/transactions/${t.id}`)}
+                  className="w-full text-left"
+                >
+                  <Card className="p-4 hover:bg-white/10 transition">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="font-extrabold text-white">{t.category || "Other"}</div>
+                        <div className="mt-0.5 text-xs text-white/60">
+                          {t.date} • {typeLabel(t.type)}
+                        </div>
+                        {t.description ? (
+                          <div className="mt-2 text-sm text-white/80">{t.description}</div>
+                        ) : null}
+                      </div>
+                      <div className={`shrink-0 text-right font-extrabold ${isIncome ? "text-emerald-200" : "text-red-200"}`}>
+                        {isIncome ? "+" : "-"}
+                        {formatCurrency(Number(t.amount || 0), currency)}
+                      </div>
+                    </div>
+                  </Card>
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
       </div>
     </Layout>
   );

@@ -1,119 +1,116 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
+import TextInput from "../components/ui/TextInput";
+import Alert from "../components/ui/Alert";
+import { useAuth } from "../context/AuthContext";
+
+function isEmail(v) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || "").trim());
+}
 
 export default function Register() {
-  const navigate = useNavigate();
+  const { register, isAuthed } = useAuth();
+  const nav = useNavigate();
 
-  // Optional controlled form states
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [pass, setPass] = useState("");
-  const [confirmPass, setConfirmPass] = useState("");
+  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
-  function handleRegister(e) {
+  useEffect(() => {
+    if (isAuthed) nav("/dashboard", { replace: true });
+  }, [isAuthed, nav]);
+
+  function validate() {
+    const errs = {};
+    if (!form.name || form.name.trim().length < 2) errs.name = "Enter your name.";
+    if (!isEmail(form.email)) errs.email = "Enter a valid email.";
+    if (!form.password || form.password.length < 6) errs.password = "Password must be at least 6 characters.";
+    return errs;
+  }
+
+  const errs = validate();
+
+  async function onSubmit(e) {
     e.preventDefault();
+    setError("");
+    const v = validate();
+    if (Object.keys(v).length) return;
 
-    // Example validation
-    if (pass !== confirmPass) {
-      alert("Passwords do not match!");
-      return;
+    setSubmitting(true);
+    try {
+      register(form);
+      nav("/dashboard", { replace: true });
+    } catch (err) {
+      setError(err?.message || "Registration failed.");
+    } finally {
+      setSubmitting(false);
     }
-
-    navigate("/login");
   }
 
   return (
-    <div className="bg-[#082D23] min-h-screen flex items-center justify-center p-6 text-[#BDEED0] font-display">
-
-      <div className="w-full max-w-md">
-        {/* Title */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-black text-white">Create Your Account</h1>
+    <div className="min-h-screen bg-[#071B15] px-4 py-10 text-white">
+      <div className="mx-auto max-w-md">
+        <div className="mb-6">
+          <Link to="/" className="text-sm text-white/70 hover:text-white underline">
+            ← Back to Home
+          </Link>
         </div>
 
-        {/* Card */}
-        <div className="bg-[#082D23]/70 p-8 rounded-xl border border-[#1E5E4A] shadow-lg">
+        <Card className="p-6">
+          <h1 className="text-2xl font-extrabold">Register</h1>
+          <p className="mt-1 text-sm text-white/60">Create an account to start tracking.</p>
 
-          {/* Form */}
-          <form onSubmit={handleRegister} className="space-y-4">
-
-            {/* Full Name */}
-            <div>
-              <label className="block text-sm font-medium text-white mb-1">
-                Full Name
-              </label>
-              <input
-                type="text"
-                placeholder="Full Name"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                required
-                className="w-full px-4 py-2 bg-[#1E5E4A] border border-[#358E6A] rounded-lg text-white placeholder-[#BDEED0]/50 focus:outline-none focus:ring-2 focus:ring-[#49B784]"
-              />
+          {error ? (
+            <div className="mt-4">
+              <Alert title="Registration failed">{error}</Alert>
             </div>
+          ) : null}
 
-            {/* Email */}
-            <div>
-              <label className="block text-sm font-medium text-white mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                placeholder="Enter Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full px-4 py-2 bg-[#1E5E4A] border border-[#358E6A] rounded-lg text-white placeholder-[#BDEED0]/50 focus:outline-none focus:ring-2 focus:ring-[#49B784]"
-              />
-            </div>
+          <form onSubmit={onSubmit} className="mt-5 space-y-4">
+            <TextInput
+              label="Name"
+              name="name"
+              placeholder="Your name"
+              value={form.name}
+              onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))}
+              error={form.name && errs.name ? errs.name : ""}
+              autoComplete="name"
+            />
+            <TextInput
+              label="Email"
+              name="email"
+              type="email"
+              placeholder="name@example.com"
+              value={form.email}
+              onChange={(e) => setForm((s) => ({ ...s, email: e.target.value }))}
+              error={form.email && errs.email ? errs.email : ""}
+              autoComplete="email"
+            />
+            <TextInput
+              label="Password"
+              name="password"
+              type="password"
+              placeholder="At least 6 characters"
+              value={form.password}
+              onChange={(e) => setForm((s) => ({ ...s, password: e.target.value }))}
+              error={form.password && errs.password ? errs.password : ""}
+              autoComplete="new-password"
+            />
 
-            {/* Password */}
-            <div>
-              <label className="block text-sm font-medium text-white mb-1">
-                Password
-              </label>
-              <input
-                type="password"
-                placeholder="Enter Password"
-                value={pass}
-                onChange={(e) => setPass(e.target.value)}
-                required
-                className="w-full px-4 py-2 bg-[#1E5E4A] border border-[#358E6A] rounded-lg text-white placeholder-[#BDEED0]/50 focus:outline-none focus:ring-2 focus:ring-[#49B784]"
-              />
-            </div>
-
-            {/* Confirm Password */}
-            <div>
-              <label className="block text-sm font-medium text-white mb-1">
-                Confirm Password
-              </label>
-              <input
-                type="password"
-                placeholder="Confirm Password"
-                value={confirmPass}
-                onChange={(e) => setConfirmPass(e.target.value)}
-                required
-                className="w-full px-4 py-2 bg-[#1E5E4A] border border-[#358E6A] rounded-lg text-white placeholder-[#BDEED0]/50 focus:outline-none focus:ring-2 focus:ring-[#49B784]"
-              />
-            </div>
-
-            {/* Button */}
-            <button
-              type="submit"
-              className="w-full py-2 bg-[#49B784] text-white font-bold rounded-lg hover:bg-[#358E6A] transition"
-            >
-              Create Account
-            </button>
+            <Button type="submit" disabled={submitting || Object.keys(errs).length > 0} className="w-full">
+              {submitting ? "Creating account…" : "Create account"}
+            </Button>
           </form>
 
-          {/* Already have an account */}
-          <p className="mt-6 text-center text-sm text-[#BDEED0]/70">
+          <div className="mt-4 text-sm text-white/70">
             Already have an account?{" "}
-            <Link to="/login" className="text-[#49B784] hover:underline">
+            <Link to="/login" className="font-semibold text-emerald-300 hover:text-emerald-200 underline">
               Login
             </Link>
-          </p>
-        </div>
+          </div>
+        </Card>
       </div>
     </div>
   );

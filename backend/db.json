@@ -1,0 +1,60 @@
+{
+  "transactions": [
+    {
+      "id": 1,
+      "type": "expense",
+      "category": "Groceries",
+      "amount": 72.5,
+      "date": "2025-12-01",
+      "description": "Weekly grocery shopping"
+    },
+    {
+      "id": 2,
+      "type": "income",
+      "category": "Salary",
+      "amount": 3500,
+      "date": "2025-12-02",
+      "description": "Monthly salary"
+    },
+    {
+      "id": 3,
+      "type": "expense",
+      "category": "Transportation",
+      "amount": 18,
+      "date": "2025-12-03",
+      "description": "Uber ride"
+    },
+    {
+      "id": 4,
+      "type": "expense",
+      "category": "Dining",
+      "amount": 45.8,
+      "date": "2025-12-05",
+      "description": "Restaurant dinner"
+    },
+    {
+      "id": 6,
+      "type": "income",
+      "category": "Freelance",
+      "amount": 240,
+      "date": "2025-11-18",
+      "description": "Small project payment"
+    },
+    {
+      "id": 7,
+      "type": "expense",
+      "category": "Shopping",
+      "amount": 129.99,
+      "date": "2025-11-20",
+      "description": "Headphones"
+    },
+    {
+      "type": "income",
+      "category": "Allowance",
+      "amount": 5000,
+      "date": "2025-12-16",
+      "description": "money",
+      "id": 8
+    }
+  ]
+}
