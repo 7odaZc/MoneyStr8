@@ -1,83 +1,112 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
+import TextInput from "../components/ui/TextInput";
+import Alert from "../components/ui/Alert";
+import { useAuth } from "../context/AuthContext";
+
+function isEmail(v) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || "").trim());
+}
 
 export default function Login() {
-  const navigate = useNavigate();
+  const { login, isAuthed } = useAuth();
+  const nav = useNavigate();
+  const loc = useLocation();
 
-  // Optional controlled state (improves form handling)
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
-  function handleLogin(e) {
+  const from = loc.state?.from || "/dashboard";
+
+  useEffect(() => {
+    if (isAuthed) nav(from, { replace: true });
+  }, [isAuthed, from, nav]);
+
+  function validate() {
+    const errs = {};
+    if (!isEmail(form.email)) errs.email = "Enter a valid email.";
+    if (!form.password || form.password.length < 6) errs.password = "Password must be at least 6 characters.";
+    return errs;
+  }
+
+  const errs = validate();
+
+  async function onSubmit(e) {
     e.preventDefault();
+    setError("");
+    const v = validate();
+    if (Object.keys(v).length) return;
 
-
-    navigate("/dashboard");
+    setSubmitting(true);
+    try {
+      login(form);
+      nav(from, { replace: true });
+    } catch (err) {
+      setError(err?.message || "Login failed.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
-    <div className="bg-[#082D23] min-h-screen flex items-center justify-center p-6 text-[#BDEED0] font-display">
-
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <img src="/Logo.png" alt="MoneyStr8" className="h-12 w-auto mx-auto" />
+    <div className="min-h-screen bg-[#071B15] px-4 py-10 text-white">
+      <div className="mx-auto max-w-md">
+        <div className="mb-6">
+          <Link to="/" className="text-sm text-white/70 hover:text-white underline">
+            ← Back to Home
+          </Link>
         </div>
 
-        {/* Card */}
-        <div className="bg-[#082D23]/70 p-8 rounded-xl border border-[#1E5E4A] shadow-lg">
-          <h2 className="text-2xl font-black text-white mb-2">
-            Log in to Your Account
-          </h2>
+        <Card className="p-6">
+          <h1 className="text-2xl font-extrabold">Login</h1>
+          <p className="mt-1 text-sm text-white/60">Use your email and password to continue.</p>
 
-          <p className="text-sm text-[#BDEED0]/70 mb-6">
+          {error ? (
+            <div className="mt-4">
+              <Alert title="Login failed">{error}</Alert>
+            </div>
+          ) : null}
+
+          <form onSubmit={onSubmit} className="mt-5 space-y-4">
+            <TextInput
+              label="Email"
+              name="email"
+              type="email"
+              placeholder="name@example.com"
+              value={form.email}
+              onChange={(e) => setForm((s) => ({ ...s, email: e.target.value }))}
+              error={form.email && errs.email ? errs.email : ""}
+              autoComplete="email"
+            />
+            <TextInput
+              label="Password"
+              name="password"
+              type="password"
+              placeholder="••••••••"
+              value={form.password}
+              onChange={(e) => setForm((s) => ({ ...s, password: e.target.value }))}
+              error={form.password && errs.password ? errs.password : ""}
+              autoComplete="current-password"
+            />
+
+            <Button type="submit" disabled={submitting || Object.keys(errs).length > 0} className="w-full">
+              {submitting ? "Logging in…" : "Login"}
+            </Button>
+          </form>
+
+          <div className="mt-4 text-sm text-white/70">
             Don’t have an account?{" "}
-            <Link to="/register" className="text-[#49B784] hover:underline">
+            <Link to="/register" className="font-semibold text-emerald-300 hover:text-emerald-200 underline">
               Register
             </Link>
-          </p>
+          </div>
+        </Card>
 
-          {/* Form */}
-          <form onSubmit={handleLogin} className="space-y-4">
-
-            {/* Email */}
-            <div>
-              <label className="block text-sm font-medium text-white mb-1">
-                Email or Username
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email or username"
-                required
-                className="w-full px-4 py-2 bg-[#1E5E4A] border border-[#358E6A] rounded-lg text-white placeholder-[#BDEED0]/50 focus:outline-none focus:ring-2 focus:ring-[#49B784]"
-              />
-            </div>
-
-            {/* Password */}
-            <div>
-              <label className="block text-sm font-medium text-white mb-1">
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter password"
-                required
-                className="w-full px-4 py-2 bg-[#1E5E4A] border border-[#358E6A] rounded-lg text-white placeholder-[#BDEED0]/50 focus:outline-none focus:ring-2 focus:ring-[#49B784]"
-              />
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              className="w-full py-2 bg-[#49B784] text-white font-bold rounded-lg hover:bg-[#358E6A] transition"
-            >
-              Log In
-            </button>
-          </form>
+        <div className="mt-4 text-xs text-white/50">
+          Authentication is simulated using localStorage (no real backend).
         </div>
       </div>
     </div>
