@@ -1,6 +1,10 @@
 # dependencies
 node_modules/
 
+#backend
+backend/
+db.json
+
 # build
 dist/
 dist-ssr/
