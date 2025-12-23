@@ -8,6 +8,7 @@ import TextInput from "../components/ui/TextInput";
 import SelectInput from "../components/ui/SelectInput";
 import Spinner from "../components/ui/Spinner";
 import Alert from "../components/ui/Alert";
+import FadeIn from "../components/ui/FadeIn";
 import { useTransactions, DEFAULT_CATEGORIES } from "../context/TransactionsContext";
 
 function toNum(v) {
@@ -138,70 +139,72 @@ export default function TransactionForm({ mode = "create" }) {
 
       {!loading ? (
         <form onSubmit={onSubmit} className="mt-6">
-          <Card className="p-5">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <SelectInput
-                label="Type"
-                value={form.type}
-                onChange={(e) => setForm((s) => ({ ...s, type: e.target.value }))}
-                error={errs.type || ""}
-              >
-                <option value="income">Income</option>
-                <option value="expense">Expense</option>
-              </SelectInput>
+          <FadeIn index={0}>
+            <Card className="p-5">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <SelectInput
+                  label="Type"
+                  value={form.type}
+                  onChange={(e) => setForm((s) => ({ ...s, type: e.target.value }))}
+                  error={errs.type || ""}
+                >
+                  <option value="income">Income</option>
+                  <option value="expense">Expense</option>
+                </SelectInput>
 
-              <div>
+                <div>
+                  <TextInput
+                    label="Category"
+                    value={form.category}
+                    onChange={(e) => setForm((s) => ({ ...s, category: e.target.value }))}
+                    error={errs.category || ""}
+                    list="category-suggestions"
+                    placeholder="e.g., Groceries"
+                  />
+                  <datalist id="category-suggestions">
+                    {categories.map((c) => (
+                      <option key={c} value={c} />
+                    ))}
+                  </datalist>
+                </div>
+
                 <TextInput
-                  label="Category"
-                  value={form.category}
-                  onChange={(e) => setForm((s) => ({ ...s, category: e.target.value }))}
-                  error={errs.category || ""}
-                  list="category-suggestions"
-                  placeholder="e.g., Groceries"
+                  label="Amount"
+                  type="number"
+                  inputMode="decimal"
+                  step="0.01"
+                  min="0"
+                  value={form.amount}
+                  onChange={(e) => setForm((s) => ({ ...s, amount: e.target.value }))}
+                  error={errs.amount || ""}
+                  placeholder="e.g., 72.50"
                 />
-                <datalist id="category-suggestions">
-                  {categories.map((c) => (
-                    <option key={c} value={c} />
-                  ))}
-                </datalist>
+
+                <TextInput
+                  label="Date"
+                  type="date"
+                  value={form.date}
+                  onChange={(e) => setForm((s) => ({ ...s, date: e.target.value }))}
+                  error={errs.date || ""}
+                />
+
+                <div className="sm:col-span-2">
+                  <TextInput
+                    label="Description"
+                    value={form.description}
+                    onChange={(e) => setForm((s) => ({ ...s, description: e.target.value }))}
+                    placeholder="Optional details…"
+                  />
+                </div>
               </div>
 
-              <TextInput
-                label="Amount"
-                type="number"
-                inputMode="decimal"
-                step="0.01"
-                min="0"
-                value={form.amount}
-                onChange={(e) => setForm((s) => ({ ...s, amount: e.target.value }))}
-                error={errs.amount || ""}
-                placeholder="e.g., 72.50"
-              />
-
-              <TextInput
-                label="Date"
-                type="date"
-                value={form.date}
-                onChange={(e) => setForm((s) => ({ ...s, date: e.target.value }))}
-                error={errs.date || ""}
-              />
-
-              <div className="sm:col-span-2">
-                <TextInput
-                  label="Description"
-                  value={form.description}
-                  onChange={(e) => setForm((s) => ({ ...s, description: e.target.value }))}
-                  placeholder="Optional details…"
-                />
+              <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end">
+                <Button type="submit" disabled={saving || Object.keys(errs).length > 0}>
+                  {saving ? "Saving…" : isEdit ? "Save changes" : "Add transaction"}
+                </Button>
               </div>
-            </div>
-
-            <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end">
-              <Button type="submit" disabled={saving || Object.keys(errs).length > 0}>
-                {saving ? "Saving…" : isEdit ? "Save changes" : "Add transaction"}
-              </Button>
-            </div>
-          </Card>
+            </Card>
+          </FadeIn>
         </form>
       ) : null}
     </Layout>

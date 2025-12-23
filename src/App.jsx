@@ -1,4 +1,5 @@
-import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
+import { HashRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -9,22 +10,48 @@ import Settings from "./pages/Settings";
 import TransactionForm from "./pages/TransactionForm";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
+import PageTransition from "./components/ui/PageTransition";
 
-export default function App() {
+function AnimatedRoutes() {
+  const location = useLocation();
+
   return (
-    <HashRouter>
-      <Routes>
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
         {/* Public */}
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route
+          path="/"
+          element={
+            <PageTransition>
+              <Home />
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/login"
+          element={
+            <PageTransition>
+              <Login />
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <PageTransition>
+              <Register />
+            </PageTransition>
+          }
+        />
 
         {/* Protected */}
         <Route
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <PageTransition>
+                <Dashboard />
+              </PageTransition>
             </ProtectedRoute>
           }
         />
@@ -32,7 +59,9 @@ export default function App() {
           path="/transactions"
           element={
             <ProtectedRoute>
-              <Transactions />
+              <PageTransition>
+                <Transactions />
+              </PageTransition>
             </ProtectedRoute>
           }
         />
@@ -40,7 +69,9 @@ export default function App() {
           path="/transactions/new"
           element={
             <ProtectedRoute>
-              <TransactionForm mode="create" />
+              <PageTransition>
+                <TransactionForm mode="create" />
+              </PageTransition>
             </ProtectedRoute>
           }
         />
@@ -48,7 +79,9 @@ export default function App() {
           path="/transactions/:id"
           element={
             <ProtectedRoute>
-              <Details />
+              <PageTransition>
+                <Details />
+              </PageTransition>
             </ProtectedRoute>
           }
         />
@@ -56,7 +89,9 @@ export default function App() {
           path="/transactions/:id/edit"
           element={
             <ProtectedRoute>
-              <TransactionForm mode="edit" />
+              <PageTransition>
+                <TransactionForm mode="edit" />
+              </PageTransition>
             </ProtectedRoute>
           }
         />
@@ -64,14 +99,31 @@ export default function App() {
           path="/settings"
           element={
             <ProtectedRoute>
-              <Settings />
+              <PageTransition>
+                <Settings />
+              </PageTransition>
             </ProtectedRoute>
           }
         />
 
-        <Route path="/404" element={<NotFound />} />
+        <Route
+          path="/404"
+          element={
+            <PageTransition>
+              <NotFound />
+            </PageTransition>
+          }
+        />
         <Route path="*" element={<Navigate to="/404" replace />} />
       </Routes>
+    </AnimatePresence>
+  );
+}
+
+export default function App() {
+  return (
+    <HashRouter>
+      <AnimatedRoutes />
     </HashRouter>
   );
 }

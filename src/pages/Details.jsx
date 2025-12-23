@@ -7,6 +7,7 @@ import Card from "../components/ui/Card";
 import Spinner from "../components/ui/Spinner";
 import Alert from "../components/ui/Alert";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
+import FadeIn from "../components/ui/FadeIn";
 import { useTransactions } from "../context/TransactionsContext";
 import { useSettings } from "../context/SettingsContext";
 import { formatCurrency } from "../utils/format";
@@ -94,32 +95,34 @@ export default function Details() {
 
       {tx && !loading ? (
         <div className="mt-6 space-y-4">
-          <Card className="p-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <div className="text-xs text-white/60">Amount</div>
-                <div className={`mt-1 text-3xl font-extrabold ${isIncome ? "text-emerald-200" : "text-red-200"}`}>
-                  {isIncome ? "+" : "-"}
-                  {formatCurrency(Number(tx.amount || 0), currency)}
+          <FadeIn index={0}>
+            <Card className="p-6">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <div className="text-xs text-white/60">Amount</div>
+                  <div className={`mt-1 text-3xl font-extrabold ${isIncome ? "text-emerald-200" : "text-red-200"}`}>
+                    {isIncome ? "+" : "-"}
+                    {formatCurrency(Number(tx.amount || 0), currency)}
+                  </div>
+                  <div className="mt-2 text-sm text-white/70">{tx.description || "—"}</div>
                 </div>
-                <div className="mt-2 text-sm text-white/70">{tx.description || "—"}</div>
+
+                <div className="flex gap-2">
+                  <Button onClick={() => nav(`/transactions/${id}/edit`)}>Edit</Button>
+                  <Button variant="danger" onClick={() => setConfirm(true)} disabled={deleting}>
+                    Delete
+                  </Button>
+                </div>
               </div>
 
-              <div className="flex gap-2">
-                <Button onClick={() => nav(`/transactions/${id}/edit`)}>Edit</Button>
-                <Button variant="danger" onClick={() => setConfirm(true)} disabled={deleting}>
-                  Delete
-                </Button>
+              <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Info label="Type" value={tx.type} />
+                <Info label="Category" value={tx.category || "Other"} />
+                <Info label="Date" value={tx.date} />
+                <Info label="ID" value={String(tx.id)} />
               </div>
-            </div>
-
-            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Info label="Type" value={tx.type} />
-              <Info label="Category" value={tx.category || "Other"} />
-              <Info label="Date" value={tx.date} />
-              <Info label="ID" value={String(tx.id)} />
-            </div>
-          </Card>
+            </Card>
+          </FadeIn>
         </div>
       ) : null}
 

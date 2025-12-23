@@ -5,6 +5,7 @@ export default function Button({
   variant = "primary",
   size = "md",
   className = "",
+  type = "button",
   ...props
 }) {
   const base =
@@ -22,6 +23,7 @@ export default function Button({
   };
   return (
     <button
+      type={type}
       className={`${base} ${variants[variant] || variants.primary} ${sizes[size] || sizes.md} ${className}`}
       {...props}
     >
