@@ -11,6 +11,8 @@ import TransactionForm from "./pages/TransactionForm";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PageTransition from "./components/ui/PageTransition";
+import Admin from "./pages/Admin";
+
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -105,6 +107,18 @@ function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+  path="/admin"
+  element={
+    <ProtectedRoute roles={["admin"]}>
+      <PageTransition>
+        <Admin />
+      </PageTransition>
+    </ProtectedRoute>
+  }
+/>
+
 
         <Route
           path="/404"

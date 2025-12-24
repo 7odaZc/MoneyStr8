@@ -142,6 +142,10 @@ export default function Layout({ title, children }) {
           <NavItem to="/dashboard" icon="dashboard" label="Dashboard" onClick={() => setOpen(false)} />
           <NavItem to="/transactions" icon="receipt_long" label="Transactions" onClick={() => setOpen(false)} />
           <NavItem to="/settings" icon="settings" label="Settings" onClick={() => setOpen(false)} />
+          {user?.role === "admin" ? (
+  <NavItem to="/admin" icon="admin_panel_settings" label="Admin" onClick={() => setOpen(false)} />
+) : null}
+
         </nav>
 
         <div className="mt-6 border-t border-white/10 pt-4">

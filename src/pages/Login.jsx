@@ -109,8 +109,11 @@ export default function Login() {
         </FadeIn>
 
         <div className="mt-4 text-xs text-white/50">
-          Authentication is simulated using localStorage (no real backend).
-        </div>
+  Auth is simulated using localStorage.
+  <br />
+  Demo admin: admin@moneystr8.com / admin123 • Demo user: user@moneystr8.com / user123
+</div>
+
       </div>
     </div>
   );
